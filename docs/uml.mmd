@@ -1,0 +1,107 @@
+classDiagram
+    class Main {
+        +main(String[] args) void
+    }
+
+    class ConsoleUI {
+        -TaskService service
+        -Scanner scanner
+        +start() void
+    }
+
+    class TaskService {
+        -TaskBoard board
+        -TaskRepository repository
+        -TaskSortStrategy sortStrategy
+        +setSortStrategy(TaskSortStrategy) void
+        +addSimpleTask(String, int) void
+        +addDeadlineTask(String, int, LocalDate) void
+        +getSortedTasks() List~TaskItem~
+        +markTaskDone(int) void
+        +deleteTask(int) void
+        +save() void
+        +load() void
+    }
+
+    class TaskSortStrategy {
+        <<interface>>
+        +getName() String
+        +sort(List~TaskItem~) List~TaskItem~
+    }
+
+    class UrgencySortStrategy {
+        +getName() String
+        +sort(List~TaskItem~) List~TaskItem~
+    }
+
+    class TitleSortStrategy {
+        +getName() String
+        +sort(List~TaskItem~) List~TaskItem~
+    }
+
+    class TaskRepository {
+        <<interface>>
+        +save(List~TaskItem~) void
+        +load() List~TaskItem~
+    }
+
+    class FileTaskRepository {
+        -Path filePath
+        +save(List~TaskItem~) void
+        +load() List~TaskItem~
+    }
+
+    class TaskBoard {
+        -String name
+        -List~TaskItem~ tasks
+        +addTask(TaskItem) void
+        +removeTask(TaskItem) void
+        +getTasks() List~TaskItem~
+    }
+
+    class TaskItem {
+        <<abstract>>
+        -String title
+        -int priority
+        -boolean done
+        +getTitle() String
+        +getPriority() int
+        +isDone() boolean
+        +markDone() void
+        +getTaskType()* String
+        +calculateUrgencyScore()* int
+        +toStorageString()* String
+        +formatDetails() String
+    }
+
+    class SimpleTask {
+        +getTaskType() String
+        +calculateUrgencyScore() int
+        +toStorageString() String
+    }
+
+    class DeadlineTask {
+        -LocalDate dueDate
+        +getDueDate() LocalDate
+        +getTaskType() String
+        +calculateUrgencyScore() int
+        +formatDetails() String
+        +toStorageString() String
+    }
+
+    class InvalidTaskException {
+        <<exception>>
+    }
+
+    Main --> ConsoleUI : creates
+    ConsoleUI "1" --> "1" TaskService : uses
+    TaskService "1" --> "1" TaskBoard : manages
+    TaskService "1" --> "1" TaskRepository : persists via
+    TaskService "1" --> "1" TaskSortStrategy : sorts using
+    TaskBoard "1" *-- "0..*" TaskItem : contains
+    TaskItem <|-- SimpleTask : extends
+    TaskItem <|-- DeadlineTask : extends
+    TaskSortStrategy <|.. UrgencySortStrategy : implements
+    TaskSortStrategy <|.. TitleSortStrategy : implements
+    TaskRepository <|.. FileTaskRepository : implements
+    TaskItem ..> InvalidTaskException : throws
